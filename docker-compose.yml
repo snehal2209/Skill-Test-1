@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend-dev:
+    build:
+      context: ./backend/dev
+    container_name: backend-dev
+    env_file:
+      - ./backend/dev/.env
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongo
+    networks:
+      - appnet
+
+  backend-prod:
+    build:
+      context: ./backend/prod
+    container_name: backend-prod
+    env_file:
+      - ./backend/prod/.env
+    ports:
+      - "3002:3002"
+    depends_on:
+      - mongo
+    networks:
+      - appnet
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend-dev
+      - backend-prod
+    networks:
+      - appnet
+
+volumes:
+  mongo_data:
+
+networks:
+  appnet:
+    driver: bridge
